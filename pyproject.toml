@@ -7,6 +7,16 @@ packages = [{include="streamlit-speech-to-text"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
+pydub = "^0.25.1"
+streamlit = "^1.32.2"
+streamlit-webrtc = "^0.47.6"
+pyannote-audio = "3.1.1"
+whisperx = {git = "git@github.com:m-bain/whisperX.git"}
+transformers = "^4.38.2"
+nltk = "^3.8.1"
+ffmpeg-python = "^0.2.0"
+faster-whisper = "^1.0.1"
+audio-recorder-streamlit = "^0.0.8"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "1.7.5"
@@ -30,7 +40,6 @@ poetry-kernel = "0.1.3"
 pre-commit = "3.5.0"
 pytest = "7.4.3"
 ruff = "0.1.5"
-streamlit = "1.28.2"
 
 [[tool.poetry.source]]
 name = "pytorch"
@@ -70,8 +79,8 @@ testpaths = [
 ]
 
 [tool.ruff]
-select = ["B", "E", "F", "T", "W", "I", "ANN001", "D"]
-ignore = ["B008", "D401", "D406", "D407", "D417"] # Lista de códigos a ignorar
+select = ["B", "E", "F", "T", "W", "I", "ANN001", "D", "C"]
+ignore = ["B008", "D401", "D406", "D407", "D417", "C901"] # Lista de códigos a ignorar
 fixable = [
     "ALL",
 ] # Permite correcciones automáticas para todas las reglas habilitadas

@@ -1,45 +1,126 @@
 """SpeechToText Streamlit App."""
+import datetime
+import os
+import sys
 
 import streamlit as st
-from plot_app import plot_signal
-from processing_app import clear_session_states, get_transcription
-from utils_app import get_audio, initialize_session_state
+import whisperx
+from audio_recorder_streamlit import audio_recorder
 
-initialize_session_state()
+TASKS = {
+    "transcribe": "Just transcribe",
+    "translate": "Transcribe and translate",
+}
 
-st.title("Demo SpeechToText")
-st.markdown("---")
-
-sidebar = st.session_state.sidebar = st.sidebar
-
-sidebar.title("Control panel")
-if st.session_state["source_state"] is None:
-    get_option = sidebar.radio("Get audio from:", ["File", "Microphone"])
-    get_audio(get_option, sidebar)
+if "audio_file" not in st.session_state:
+    st.session_state["audio_file"] = None
 
 
-if st.session_state["source_state"] is not None:
-    st.session_state.model = sidebar.selectbox(
-        "Select the model", ["Offline", "Online"]
+def transcribe_audio(file_path, task_option, model):
+    """
+    Transcribe the audio file at the specified path.
+
+    :param file_path: The path of the audio file to transcribe
+    :return: The transcribed text
+    """
+    audio = whisperx.load_audio(file_path)
+    return model.transcribe(audio, task=task_option)
+
+
+def save_audio_file(audio_bytes, file_extension):
+    """
+    Save audio bytes to a file with the specified extension.
+
+    :param audio_bytes: Audio data in bytes
+    :param file_extension: The extension of the output audio file
+    :return: The name of the saved audio file
+    """
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"audio_{timestamp}.{file_extension}"
+
+    with open(file_name, "wb") as f:
+        f.write(audio_bytes)
+
+    return file_name
+
+
+def main():
+    """Main function to run the Whisper Transcription app."""
+    st.title("Speech To Text")
+    st.markdown("---")
+
+    st.sidebar.title("Control panel")
+    st.sidebar.markdown("---")
+
+    st.sidebar.markdown("## STT model size")
+    model_size = st.sidebar.selectbox(
+        "Select the size of the STT model:",
+        ["tiny", "base", "small", "medium", "large"],
+        format_func=lambda x: x.capitalize(),
     )
-    st.session_state.language = sidebar.selectbox(
-        "Select the language", ["Spanish", "English"]
+    model = whisperx.load_model(
+        model_size,
+        device="cpu",
+        compute_type="int8",
+        download_root=f"{os.path.expanduser('~')}/.cache/whisper-models",
     )
-    st.write(st.session_state.model)
-    plot_signal()
-    filename = st.session_state.source_file
-    st.audio(filename)
-    transcription_response, time = get_transcription(filename)
-    transcription = transcription_response[0][0]["transcription"]
+    st.sidebar.markdown("---")
 
-    st.header(f"Raw {st.session_state.model} Transcription")
-    st.info(transcription)
-    st.warning(f"Executed in {time} seconds.")
+    st.sidebar.markdown("## Audio source")
+    audio_option = st.sidebar.radio("Get audio from:", ["Audio File", "Microphone"])
 
-if sidebar.button("Add another audio", on_click=clear_session_states):
-    pass
+    if audio_option == "Audio File":
+        if audio_file := st.sidebar.file_uploader(
+            "Upload Audio", type=["mp3", "mp4", "wav", "m4a"]
+        ):
+            file_extension = audio_file.type.split("/")[1]
+            st.session_state.audio_file = save_audio_file(
+                audio_file.read(), file_extension
+            )
+    elif audio_option == "Microphone":
+        with st.sidebar:
+            if audio_bytes := audio_recorder():
+                st.session_state.audio_file = save_audio_file(audio_bytes, "mp3")
+    st.sidebar.markdown("---")
 
-sidebar.info(
-    """This app uses the Speech-to-Text API, for more information visit:
-     https://LyticaMx.github.io/voiceutils-speechToText/"""
-)
+    st.sidebar.markdown("## Task")
+    task_option = st.sidebar.radio(
+        "Select the task to perform:",
+        ["transcribe", "translate"],
+        format_func=lambda x: TASKS[x],
+    )
+    st.sidebar.markdown("---")
+
+    # Transcribe the audio file
+    if st.session_state.audio_file:
+        st.audio(st.session_state.audio_file)
+        # Transcribe button action
+
+        if st.button("Transcribe"):
+            # Find the newest audio file
+            transcript_text = transcribe_audio(
+                st.session_state.audio_file, task_option, model
+            )
+
+            # Display the transcript
+            st.header("Transcript")
+            st.write(
+                "".join([segment["text"] for segment in transcript_text["segments"]])
+            )
+
+
+# Save the transcript to a text file
+#        with open("transcript.txt", "w") as f:
+#            f.write(transcript_text)
+
+# Provide a download button for the transcript
+#        st.download_button("Download Transcript", transcript_text)
+
+
+if __name__ == "__main__":
+    # Set up the working directory
+    working_dir = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(working_dir)
+
+    # Run the main function
+    main()
