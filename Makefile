@@ -232,7 +232,7 @@ ifdef ip
 else
 	@cd ${PROJECT_PATH}/app;\
 	echo "Deploying local Streamlit App..."; \
-	poetry run streamlit run 01_✨_Model_App.py --server.port=8601 --server.enableCORS=false --server.enableXsrfProtection=false --theme.base=dark --theme.primaryColor=#9333ea --theme.font=monospace --theme.textColor=#f1f5f9 --server.fileWatcherType=none
+	poetry run streamlit run 01_✨_Model_App.py --server.port=8601 --server.enableCORS=false --server.enableXsrfProtection=false --theme.base=dark --theme.primaryColor=#9333ea --theme.font=monospace --theme.textColor=#f1f5f9
 endif
 
 #############

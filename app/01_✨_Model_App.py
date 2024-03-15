@@ -2,6 +2,7 @@
 import datetime
 import os
 import sys
+import time
 
 import streamlit as st
 import whisperx
@@ -44,11 +45,24 @@ def save_audio_file(audio_bytes, file_extension):
     return file_name
 
 
-def main():
-    """Main function to run the Whisper Transcription app."""
-    st.title("Speech To Text")
-    st.markdown("---")
+def set_audio_option(audio_option):
+    """Set audio option."""
+    if audio_option == "Audio File":
+        if audio_file := st.sidebar.file_uploader(
+            "Upload Audio", type=["mp3", "mp4", "wav", "m4a"]
+        ):
+            file_extension = audio_file.type.split("/")[1]
+            st.session_state.audio_file = save_audio_file(
+                audio_file.read(), file_extension
+            )
+    elif audio_option == "Microphone":
+        with st.sidebar:
+            if audio_bytes := audio_recorder():
+                st.session_state.audio_file = save_audio_file(audio_bytes, "mp3")
 
+
+def set_control_panel():
+    """Set the control panel."""
     st.sidebar.title("Control panel")
     st.sidebar.markdown("---")
 
@@ -68,19 +82,7 @@ def main():
 
     st.sidebar.markdown("## Audio source")
     audio_option = st.sidebar.radio("Get audio from:", ["Audio File", "Microphone"])
-
-    if audio_option == "Audio File":
-        if audio_file := st.sidebar.file_uploader(
-            "Upload Audio", type=["mp3", "mp4", "wav", "m4a"]
-        ):
-            file_extension = audio_file.type.split("/")[1]
-            st.session_state.audio_file = save_audio_file(
-                audio_file.read(), file_extension
-            )
-    elif audio_option == "Microphone":
-        with st.sidebar:
-            if audio_bytes := audio_recorder():
-                st.session_state.audio_file = save_audio_file(audio_bytes, "mp3")
+    set_audio_option(audio_option)
     st.sidebar.markdown("---")
 
     st.sidebar.markdown("## Task")
@@ -90,6 +92,30 @@ def main():
         format_func=lambda x: TASKS[x],
     )
     st.sidebar.markdown("---")
+
+    return model, task_option
+
+
+def transcribe(transcript_text):
+    """Transcribe."""
+    st.header("Transcript")
+    segments = list(transcript_text["segments"])
+
+    def stream_data():
+        for segment in segments:
+            for word in segment["text"].split(" "):
+                yield f"{word} "
+                time.sleep(0.02)
+
+    st.write_stream(stream_data)
+
+
+def main():
+    """Main function to run the Whisper Transcription app."""
+    st.title("Speech To Text")
+    st.markdown("---")
+
+    model, task_option = set_control_panel()
 
     # Transcribe the audio file
     if st.session_state.audio_file:
@@ -103,18 +129,21 @@ def main():
             )
 
             # Display the transcript
-            st.header("Transcript")
-            st.write(
-                "".join([segment["text"] for segment in transcript_text["segments"]])
+            transcribe(transcript_text)
+
+            # Save the transcript to a text file
+            with open("transcript.txt", "w") as f:
+                f.write(
+                    " ".join(
+                        [segment["text"] for segment in transcript_text["segments"]]
+                    )
+                )
+
+            # Provide a download button for the transcript
+            st.download_button(
+                "Download Transcript",
+                " ".join([segment["text"] for segment in transcript_text["segments"]]),
             )
-
-
-# Save the transcript to a text file
-#        with open("transcript.txt", "w") as f:
-#            f.write(transcript_text)
-
-# Provide a download button for the transcript
-#        st.download_button("Download Transcript", transcript_text)
 
 
 if __name__ == "__main__":
