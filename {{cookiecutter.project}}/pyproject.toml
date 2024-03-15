@@ -1,0 +1,89 @@
+[tool.poetry]
+name = "{{cookiecutter.project}}"
+version = "0.1.0"
+description = "{{cookiecutter.description.capitalize()}}"
+authors = ["{{cookiecutter.author}}"]
+packages = [{include="{{cookiecutter.project}}"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+bandit = "1.7.5"
+black = "23.11.0"
+click = "8.1.7"
+commitizen = "3.13.0"
+coverage = "7.3.2"
+flake8 = "6.1.0"
+ipython = "7.34.0"
+isort = "5.12.0"
+Jinja2 = "3.0.3"
+jupyterlab = "3.6.5"
+jupyterlab-snippets = "0.4.1"
+matplotlib = "3.8.1"
+memory-profiler = "0.61.0"
+mike = "2.0.0"
+mkdocs = "1.2.3"
+mkdocs-material = "7.3.6"
+mkdocstrings-python = "1.3.0"
+poetry-kernel = "0.1.3"
+pre-commit = "3.5.0"
+pytest = "7.4.3"
+ruff = "0.1.5"
+streamlit = "1.28.2"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "pep440"
+version_provider = "poetry"
+update_changelog_on_bump = true
+major_version_zero = true
+
+[tool.coverage.run]
+source = [
+    "{{cookiecutter.project}}/",
+]
+omit = [
+    'tests/',
+    '/tmp/',
+]
+
+[tool.isort]
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+default_section = "THIRDPARTY"
+known_third_party = []
+known_first_party = ["{{cookiecutter.project}}"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.ruff]
+select = ["B", "E", "F", "T", "W", "I", "ANN001", "D"]
+ignore = ["B008", "D401", "D406", "D407", "D417"] # Lista de códigos a ignorar
+fixable = [
+    "ALL",
+] # Permite correcciones automáticas para todas las reglas habilitadas
+unfixable = [] # Lista de códigos que no deben corregirse automáticamente
+exclude = [
+    ".git",
+    "env",
+    "templates",
+    "app",
+] # Directorios excluidos del análisis de linting
+line-length = 88 # Longitud máxima de línea permitida
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

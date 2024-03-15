@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "python-project-template"
+version = "0.1.0"
+description = "General Cookiecutter template for Python project."
+authors = ["Alejandro Aguayo-Ortiz <aaguayoo92@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

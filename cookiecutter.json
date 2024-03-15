@@ -1,0 +1,6 @@
+{
+    "project": "<project_name>", 
+    "description": "Project description.",
+    "author": "Author 1 <author_1@gmail.com>",
+    "repository": "Name of the Github profile."
+}
